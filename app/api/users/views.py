@@ -1,6 +1,6 @@
 from flask import jsonify, request
 from bcrypt import hashpw,gensalt,checkpw
-from flask_jwt_extended import jwt_required,  create_access_token
+from flask_jwt_extended import   create_access_token
 from app.models import User
 from app.api.users import user_bp
 from  app.models import db

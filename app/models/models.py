@@ -85,8 +85,29 @@ class Vehicle(db.Model):
 
     # relationship
     fleet = relationship('Fleet',back_populates='vehicle')
-    specs = relationship('Vehicle_specs',back_populates='vehicle')
+    specs = relationship('Vehicle_specs',uselist=False,back_populates='vehicle')
     booking = relationship('Booking',back_populates='vehicle')
+
+    def update(self, **kwargs):
+        for key, value in kwargs.items():
+            if hasattr(self, key):
+                setattr(self, key, value)
+            elif self.specs and hasattr(self.specs, key):
+                self.specs.update(key, value)  # Call update method in Vehicle_specs
+            else:
+                raise AttributeError(f"{key} is not a valid attribute of Vehicle or Vehicle_specs")
+
+        db.session.commit()  # Commit the changes after all updates
+
+    def get_with_specs(self):
+        if not self.specs:
+            return None
+        
+        print(self.specs)
+        return {
+           'rental_rate': self.rental_rate,
+           'specs': self.specs.to_dict()
+        }
 
 
 class Fleet(db.Model):
@@ -116,7 +137,29 @@ class Vehicle_specs(db.Model):
     fuel_type = db.Column(db.String(100), nullable=False)
 
     # relationship
-    vehicle= relationship('Vehicle',back_populates='specs')
+    vehicle= relationship('Vehicle',back_populates='specs',uselist=False)
+
+    def update(self, key, value):
+        """Update the attribute of the vehicle specs."""
+        if hasattr(self, key):
+            setattr(self, key, value)
+            db.session.commit()
+        else:
+            raise AttributeError(f"{key} is not a valid attribute of Vehicle_specs")
+    
+
+    def to_dict(self):
+        return {
+           'manufacturer': self.manufacturer,
+           'model': self.model,
+           'year': self.year,
+           'engine_capacity': self.engine_capacity,
+           'transmission_capacity': self.transmission_capacity,
+          'seating_capacity': self.seating_capacity,
+           'color': self.color,
+           'features': self.features,
+           'fuel_type': self.fuel_type
+        }
 
 
 
