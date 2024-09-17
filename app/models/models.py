@@ -36,7 +36,7 @@ class Code(db.Model):
     code = db.Column(db.String(4), nullable=False,default=str(randint(000,9999)).zfill(4))
 
     # relationship
-    user = relationship('User',back_populates='codes')
+    user = relationship('User',uselist=False,back_populates='code')
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -51,7 +51,7 @@ class User(db.Model):
     created_at = db.Column(db.DateTime,nullable=False,default=datetime.now(timezone.utc))
 
     # relationship
-    codes = relationship('Code',uselist=False,back_populates='user')
+    code = relationship('Code',uselist=False,back_populates='user')
     support = relationship('Customer_support',back_populates='user')
     booking = relationship('Booking',back_populates='user')
 
@@ -66,6 +66,26 @@ class User(db.Model):
             # 'created_at': self.created_at.isoformat(),
         }
 
+    def set_code(self):
+        code = Code(id=self.id)
+        db.session.add(code)
+        db.session.commit()
+    
+    def update_code(self):
+        code = Code.query.filter_by(id=self.id).first()
+        if code:
+            code.code = str(randint(000,9999)).zfill(4)
+            db.session.commit()
+        else:
+            self.set_code()
+
+    def get_code(self):
+        code = Code.query.filter_by(id=self.id).first()
+        if code:
+            return code.code
+        else:
+            return None
+
 
 class Customer_support(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -76,7 +96,7 @@ class Customer_support(db.Model):
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.now(timezone.utc))
 
     # relationship
-    user = relationship('User',back_populates='support')
+    user = relationship('User',back_populates='support',uselist=False)
 
 
 class Vehicle(db.Model):
@@ -173,6 +193,22 @@ class Location(db.Model):
     # relationship
     booking = relationship('Booking',back_populates='location')
 
+    def to_dict(self):
+        return {
+            'id':self.id,
+            'name': self.name,
+            'address': self.address,
+            'contact': self.contact,
+        }
+
+    def update(self,**kwargs):
+        for key, value in kwargs.items():
+            if hasattr(self, key):
+                setattr(self, key, value)
+            else:
+                raise AttributeError(f"{key} is not a valid attribute of Location")
+
+        db.session.commit()
 
 class Booking(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)

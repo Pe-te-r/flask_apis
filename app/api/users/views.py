@@ -1,11 +1,11 @@
 from flask import jsonify, request
 from bcrypt import hashpw,gensalt,checkpw
 from flask_jwt_extended import   create_access_token
+from sqlalchemy import or_
 from app.models import User
 from app.api.users import user_bp
 from  app.models import db
-from sqlalchemy import or_
-
+from app.mails import send_email
 # register user
 @user_bp.route('/register',methods=['POST'])
 def register_user():
@@ -87,6 +87,7 @@ def delete_user(user_id):
 # get all users
 @user_bp.route('/',methods = ['GET'])
 def all_users():
+    send_email('peter','mburu0116@gmail.com')
     users = User.query.all()
     if not users:
         return jsonify({'message': 'No users found'}), 404
