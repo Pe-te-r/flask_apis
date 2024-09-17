@@ -6,6 +6,7 @@ from app.api.users import user_bp
 from  app.models import db
 from sqlalchemy import or_
 
+# register user
 @user_bp.route('/register',methods=['POST'])
 def register_user():
     data = request.get_json()
@@ -19,7 +20,7 @@ def register_user():
     db.session.commit()
     return jsonify({'message': user.to_dict()}), 201
 
-
+# login user
 @user_bp.route('/login', methods=['POST'])
 def login_user():
     data = request.get_json()
@@ -35,7 +36,8 @@ def login_user():
             return jsonify({'message': 'Invalid credentials'}), 401
     else:
         return jsonify({'message': 'User not found'}), 404
-    
+
+# get one user
 @user_bp.route('/<int:user_id>', methods=['GET'])
 def get_user(user_id):
     user = User.query.filter(User.id==user_id).first()
@@ -45,8 +47,47 @@ def get_user(user_id):
         return jsonify({'message': 'User not found'}), 404
 
 
-
-@user_bp.route('/<int:user_id>', methods=['PUT'])
-@jwt_required()
+# update user
+@user_bp.route('/<int:user_id>',methods = ['PUT'])
 def update_user(user_id):
-    pass
+    user = User.query.filter_by(user_id=user_id).first()
+    if not user:
+        return jsonify({'message': 'User not found'}), 404
+    data = request.get_json()
+    if 'name' in data:
+        user.name = data['name']
+    if 'email' in data:
+        user.email = data['email']
+    if 'password' in data:
+        user.password = hashpw(data['password'].encode('utf-8'), gensalt())  # Hash the new password
+    if 'username' in data:
+        user.username = data['username']
+    if 'contact' in data:
+        user.contact = data['contact']
+    if 'address' in data:
+        user.address = data['address']
+    if 'role' in data:
+        user.role = data['role'] 
+    if 'verified' in data:
+        user.verified = data['verified']
+    db.session.commit()
+
+    return jsonify({'message': 'User updated successfully'}), 200
+
+# delete user
+@user_bp.route('/<int:user_id>',methods=['DELETE'])
+def delete_user(user_id):
+    print(user_id)
+    user = User.query.get_or_404(user_id)
+    db.session.delete(user)
+    db.session.commit()
+    return jsonify({'message': 'User deleted successfully'}), 204
+
+
+# get all users
+@user_bp.route('/',methods = ['GET'])
+def all_users():
+    users = User.query.all()
+    if not users:
+        return jsonify({'message': 'No users found'}), 404
+    return jsonify([user.to_dict() for user in users]), 200

@@ -47,6 +47,7 @@ class User(db.Model):
     contact = db.Column(db.String(15), nullable=True)
     address = db.Column(db.String(40), nullable=True)
     role = db.Column(db.Enum(RoleEnum),nullable=False,default=RoleEnum.USER)
+    verified = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime,nullable=False,default=datetime.now(timezone.utc))
 
     # relationship
