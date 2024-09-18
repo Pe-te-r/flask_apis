@@ -1,6 +1,6 @@
 from flask import jsonify, request
 from bcrypt import hashpw,gensalt,checkpw
-from flask_jwt_extended import current_user, get_jwt_identity,  jwt_required,   create_access_token
+from flask_jwt_extended import  get_jwt_identity,  jwt_required,   create_access_token
 from sqlalchemy import or_
 from app.models import User
 from app.api.users import user_bp
@@ -18,6 +18,7 @@ def register_user():
     user = User(name=data['name'], email = data['email'],contact = data['contact'],address=data['address'],username=data['username'],password=password.decode('utf-8') )
     db.session.add(user)
     db.session.commit()
+    user.set_code()
     send_email(data['name'],data['email'],'new')
     return jsonify({'message': user.to_dict()}), 201
 
@@ -54,7 +55,11 @@ def get_user(user_id):
 
 # update user
 @user_bp.route('/<int:user_id>',methods = ['PUT'])
+@jwt_required()
 def update_user(user_id):
+    verified_user = get_jwt_identity()
+    if verified_user['id']!= user_id and verified_user['role']!='admin':
+        return jsonify({'message': 'Unauthorized access'}), 401
     user = User.query.filter_by(id=user_id).first()
     if not user:
         return jsonify({'message': 'User not found'}), 404
