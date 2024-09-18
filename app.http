@@ -1,1 +1,25 @@
 GET   http://127.0.0.1:5000/users
+
+
+### register
+POST http://127.0.0.1:5000/users/register
+Content-Type: application/json
+
+    {
+        "name":"elias",
+        "password":"elias",
+        "email":"elias@gmail.com",
+        "contact":"0768543269",
+        "address":"nairobi",
+        "username":"chege"
+    }
+
+
+###login
+POST http://127.0.0.1:5000/users/login
+Content-Type: application/json
+
+    {
+        "email":"elias@gmail.com",
+        "password":"elias"
+    }

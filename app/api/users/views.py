@@ -10,6 +10,7 @@ from app.mails import send_email
 @user_bp.route('/register',methods=['POST'])
 def register_user():
     data = request.get_json()
+    print(data)
     user_exists =User.query.filter(or_(User.name == data['name'], User.email == data['email'])).first()
     if user_exists:
         return jsonify({'message': 'User already exists'}), 409
@@ -18,13 +19,15 @@ def register_user():
     user = User(name=data['name'], email = data['email'],contact = data['contact'],address=data['address'],username=data['username'],password=password.decode('utf-8') )
     db.session.add(user)
     db.session.commit()
+    send_email(data['name'],data['email'],'new')
     return jsonify({'message': user.to_dict()}), 201
 
 # login user
 @user_bp.route('/login', methods=['POST'])
 def login_user():
     data = request.get_json()
-    user = User.query.filter_by(email=data['email']).first()
+    # user = User.query.filter_by(email=data['email']).first()
+    user = User.query.filter(or_(User.email == data['email'], User.username == data['username'])).first()
     if user:
         hashed_password = user.password.encode('utf-8')  # Ensure the stored password is in bytes
         input_password = data['password'].encode('utf-8')  # Convert input password to bytes
@@ -87,7 +90,6 @@ def delete_user(user_id):
 # get all users
 @user_bp.route('/',methods = ['GET'])
 def all_users():
-    send_email('peter','mburu0116@gmail.com')
     users = User.query.all()
     if not users:
         return jsonify({'message': 'No users found'}), 404
