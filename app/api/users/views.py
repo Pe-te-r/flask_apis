@@ -1,6 +1,6 @@
 from flask import jsonify, request
 from bcrypt import hashpw,gensalt,checkpw
-from flask_jwt_extended import   create_access_token
+from flask_jwt_extended import current_user, get_jwt_identity,  jwt_required,   create_access_token
 from sqlalchemy import or_
 from app.models import User
 from app.api.users import user_bp
@@ -10,7 +10,6 @@ from app.mails import send_email
 @user_bp.route('/register',methods=['POST'])
 def register_user():
     data = request.get_json()
-    print(data)
     user_exists =User.query.filter(or_(User.name == data['name'], User.email == data['email'])).first()
     if user_exists:
         return jsonify({'message': 'User already exists'}), 409
@@ -26,14 +25,13 @@ def register_user():
 @user_bp.route('/login', methods=['POST'])
 def login_user():
     data = request.get_json()
-    # user = User.query.filter_by(email=data['email']).first()
-    user = User.query.filter(or_(User.email == data['email'], User.username == data['username'])).first()
+    user = User.query.filter_by(email=data['email']).first()
     if user:
         hashed_password = user.password.encode('utf-8')  # Ensure the stored password is in bytes
         input_password = data['password'].encode('utf-8')  # Convert input password to bytes
         
         if checkpw(input_password, hashed_password):
-            access_token = create_access_token(identity=user.id)
+            access_token = create_access_token(identity={"id":user.id,"role":str(user.role.value)})
             return jsonify(access_token=access_token), 200
         else:
             return jsonify({'message': 'Invalid credentials'}), 401
@@ -42,7 +40,11 @@ def login_user():
 
 # get one user
 @user_bp.route('/<int:user_id>', methods=['GET'])
+@jwt_required()
 def get_user(user_id):
+    verified_user= get_jwt_identity()
+    if verified_user['id']!= user_id and verified_user['role']!='admin':
+        return jsonify({'message': 'Unauthorized access'}), 401
     user = User.query.filter(User.id==user_id).first()
     if user:
         return jsonify(user.to_dict()), 200
@@ -53,7 +55,7 @@ def get_user(user_id):
 # update user
 @user_bp.route('/<int:user_id>',methods = ['PUT'])
 def update_user(user_id):
-    user = User.query.filter_by(user_id=user_id).first()
+    user = User.query.filter_by(id=user_id).first()
     if not user:
         return jsonify({'message': 'User not found'}), 404
     data = request.get_json()
@@ -79,18 +81,28 @@ def update_user(user_id):
 
 # delete user
 @user_bp.route('/<int:user_id>',methods=['DELETE'])
+@jwt_required()
 def delete_user(user_id):
-    print(user_id)
-    user = User.query.get_or_404(user_id)
-    db.session.delete(user)
-    db.session.commit()
-    return jsonify({'message': 'User deleted successfully'}), 204
+    verified_user = get_jwt_identity()
+    if verified_user['id'] == user_id or verified_user['role'] == 'admin':
+        user = User.query.filter_by(id=user_id).first()
+        if not user:
+            return jsonify({'message': 'User not found'}), 404
+        db.session.delete(user)
+        db.session.commit()
+        return jsonify({'message': 'User deleted successfully'})
+    else:
+        return jsonify({'message': 'you are not allowed to'})
 
 
 # get all users
 @user_bp.route('/',methods = ['GET'])
+@jwt_required()
 def all_users():
-    users = User.query.all()
-    if not users:
-        return jsonify({'message': 'No users found'}), 404
-    return jsonify([user.to_dict() for user in users]), 200
+    verified_user = get_jwt_identity()
+    if verified_user['role'] == 'admin':
+        users = User.query.all()
+        if not users:
+            return jsonify({'message': 'No users found'}), 404
+        return jsonify([user.to_dict() for user in users]), 200
+    return jsonify({'message': 'you are not allowed to'})

@@ -1,4 +1,5 @@
-GET   http://127.0.0.1:5000/users
+GET   http://127.0.0.1:5000/users/2
+Authorization:  Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTcyNjY5NTQ2NCwianRpIjoiOWFiZWIwNzAtNDZiYS00NDhmLTk3NzYtNGQ0OGM1OTg5ZjQzIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6eyJpZCI6Mywicm9sZSI6ImFkbWluIn0sIm5iZiI6MTcyNjY5NTQ2NCwiY3NyZiI6ImU0ZWEwZmY2LTFiNTItNDRkNy05NGZlLTdkY2JlYjAxZjE4ZSIsImV4cCI6MTcyNjY5NjM2NH0.2swE54GdC1QgWee5std33Eoe4Nh98ZeYpGt4P3dPYsI
 
 
 ### register
@@ -23,3 +24,15 @@ Content-Type: application/json
         "email":"elias@gmail.com",
         "password":"elias"
     }
+
+###update user
+PUT http://127.0.0.1:5000/users/3
+Content-Type: application/json
+
+{   
+    "role": "ADMIN"
+}
+
+### delete user
+DELETE http://127.0.0.1:5000/users/1
+Authorization:  Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTcyNjY5NTQ2NCwianRpIjoiOWFiZWIwNzAtNDZiYS00NDhmLTk3NzYtNGQ0OGM1OTg5ZjQzIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6eyJpZCI6Mywicm9sZSI6ImFkbWluIn0sIm5iZiI6MTcyNjY5NTQ2NCwiY3NyZiI6ImU0ZWEwZmY2LTFiNTItNDRkNy05NGZlLTdkY2JlYjAxZjE4ZSIsImV4cCI6MTcyNjY5NjM2NH0.2swE54GdC1QgWee5std33Eoe4Nh98ZeYpGt4P3dPYsI
