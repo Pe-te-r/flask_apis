@@ -1,4 +1,5 @@
 from flask import request, jsonify
+from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.models.models import Vehicle,Vehicle_specs
 from . import vehicle_bp
 from app import db
@@ -24,7 +25,11 @@ def get_one_vehicle(vehicle_id):
 
 # delete a vehicle
 @vehicle_bp.route('/<int:vehicle_id>', methods=['DELETE'])
+@jwt_required()
 def delete_vehicle(vehicle_id):
+    verified_user = get_jwt_identity()
+    if verified_user['role']!= 'admin':
+        return jsonify({'message': 'Unauthorized access'}), 401
     vehicle = Vehicle.query.filter_by(id=vehicle_id).first()
     if vehicle:
         db.session.delete(vehicle)
@@ -34,7 +39,11 @@ def delete_vehicle(vehicle_id):
 
 #create a new vehicle
 @vehicle_bp.route('/', methods=['POST'])
+@jwt_required()
 def new_vehicle():
+    verified_user = get_jwt_identity()
+    if verified_user['role']!= 'admin':
+        return jsonify({'message': 'Unauthorized access'}), 401
     try:
         data = request.get_json()
         new_vehicle = Vehicle(rental_rate=data['rental_rate'])
@@ -61,7 +70,11 @@ def new_vehicle():
 
 # update the vehicle
 @vehicle_bp.route('/<int:vehicle_id>', methods=['PUT'])
+@jwt_required()
 def update_vehicle(vehicle_id):
+    verified_user = get_jwt_identity()
+    if verified_user['role']!= 'admin':
+        return jsonify({'message': 'Unauthorized access'}), 401
     data = request.get_json()
     vehicle = Vehicle.query.filter_by(id=vehicle_id).first()
     if vehicle:
