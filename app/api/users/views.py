@@ -26,6 +26,7 @@ def register_user():
 @user_bp.route('/login', methods=['POST'])
 def login_user():
     data = request.get_json()
+    print(data)
     user = User.query.filter_by(email=data['email']).first()
     if user:
         hashed_password = user.password.encode('utf-8')  # Ensure the stored password is in bytes
@@ -35,9 +36,9 @@ def login_user():
             access_token = create_access_token(identity={"id":user.id,"role":str(user.role.value)})
             return jsonify(access_token=access_token), 200
         else:
-            return jsonify({'message': 'Invalid credentials'}), 401
+            return jsonify({'error': 'Invalid credentials'}),401
     else:
-        return jsonify({'message': 'User not found'}), 404
+        return jsonify({'error': 'User not found'}), 404
 
 # get one user
 @user_bp.route('/<int:user_id>', methods=['GET'])

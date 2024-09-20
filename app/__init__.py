@@ -6,13 +6,14 @@ from dotenv import load_dotenv
 from app.models import db
 from app.api import register_bp
 from .config import Config
+from flask_cors import CORS
 
 load_dotenv()
 
 jwt= JWTManager()
 mg= Migrate()
 mail = Mail()
-
+cors = CORS()
 
 def create_app():
     app = Flask(__name__)
@@ -20,6 +21,7 @@ def create_app():
 
     db.init_app(app)
     mail.init_app(app)
+    cors.init_app(app)
 
     # Migrate(app, db)
     # JWTManager(app)
