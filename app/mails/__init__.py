@@ -1,7 +1,7 @@
 from flask import render_template,current_app
 from flask_mail import Message
 
-def send_email(username, email,template):
+def send_email(username, email,template,data=None):
     # Example dynamic content
     message_body = "Welcome to our platform! We're glad to have you."
 
@@ -15,7 +15,8 @@ def send_email(username, email,template):
 
     # Render the HTML template with dynamic content
     if template == 'code':
-        msg.html = render_template('email_template.html', name=username, message_body=message_body)
+        msg.subject="Your verification code"  
+        msg.html = render_template('code.html', name=username, message_body=message_body,code=data)
     if template == 'new':
         msg.subject="Welcome to our platform"
         msg.html = render_template('welcome_template.html', name=username, message_body=message_body)

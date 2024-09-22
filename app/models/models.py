@@ -86,6 +86,13 @@ class User(db.Model):
         else:
             return None
 
+    def is_verified(self):
+        return self.verified
+    
+    def verify_code(self, code):
+        return self.code.code == code
+    
+
 
 class Customer_support(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)

@@ -1,7 +1,6 @@
 from flask import jsonify, request
 from bcrypt import hashpw,gensalt,checkpw
 from flask_jwt_extended import  get_jwt_identity,  jwt_required,   create_access_token
-from sqlalchemy import or_
 from app.models import User
 from app.api.users import user_bp
 from  app.models import db
@@ -10,9 +9,13 @@ from app.mails import send_email
 @user_bp.route('/register',methods=['POST'])
 def register_user():
     data = request.get_json()
-    user_exists =User.query.filter(or_(User.name == data['name'], User.email == data['email'])).first()
-    if user_exists:
-        return jsonify({'message': 'User already exists'}), 409
+    user_email =User.query.filter(User.email == data['email']).first()
+    if user_email:
+        return jsonify({'message': 'Email already exists'}), 409
+    
+    user_username = User.query.filter(User.username == data['username']).first()
+    if user_username:
+        return jsonify({'message': 'Username already exists'}), 409
 
     password = hashpw(data['password'].encode('utf-8'),gensalt())
     user = User(name=data['name'], email = data['email'],contact = data['contact'],address=data['address'],username=data['username'],password=password.decode('utf-8') )
@@ -20,25 +23,37 @@ def register_user():
     db.session.commit()
     user.set_code()
     send_email(data['name'],data['email'],'new')
-    return jsonify({'message': user.to_dict()}), 201
+    return jsonify({'message': 'success'}), 201
 
 # login user
 @user_bp.route('/login', methods=['POST'])
 def login_user():
     data = request.get_json()
-    print(data)
     user = User.query.filter_by(email=data['email']).first()
     if user:
         hashed_password = user.password.encode('utf-8')  # Ensure the stored password is in bytes
         input_password = data['password'].encode('utf-8')  # Convert input password to bytes
         
+        if 'code' in data:
+            if not user.verify_code(data['code']):
+                return jsonify({'error': 'Invalid code'}), 401
+            else:
+                user.verified = True
+                db.session.commit()
+
+
+
         if checkpw(input_password, hashed_password):
+            if not user.is_verified() and 'code' not  in data:
+                send_email(user.name,data['email'],'code',data=user.code.code)
+                return jsonify({'error': 'Email not verified'}), 401
+
             access_token = create_access_token(identity={"id":user.id,"role":str(user.role.value)})
             return jsonify(access_token=access_token), 200
         else:
             return jsonify({'error': 'Invalid credentials'}),401
     else:
-        return jsonify({'error': 'User not found'}), 404
+        return jsonify({'error': 'Email not found'}), 404
 
 # get one user
 @user_bp.route('/<int:user_id>', methods=['GET'])
