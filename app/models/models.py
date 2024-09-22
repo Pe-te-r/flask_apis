@@ -62,7 +62,6 @@ class User(db.Model):
             'contact': self.contact,
             'address': self.address,
             'role': self.role.name,
-            'password': self.password
             # 'created_at': self.created_at.isoformat(),
         }
 

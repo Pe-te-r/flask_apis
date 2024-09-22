@@ -36,7 +36,7 @@ def login_user():
         
         if 'code' in data:
             if not user.verify_code(data['code']):
-                return jsonify({'error': 'Invalid code'}), 401
+                return jsonify({'error': 'Invalid code check your email for a valid one'}), 401
             else:
                 user.verified = True
                 db.session.commit()
@@ -45,6 +45,7 @@ def login_user():
 
         if checkpw(input_password, hashed_password):
             if not user.is_verified() and 'code' not  in data:
+                user.update_code()
                 send_email(user.name,data['email'],'code',data=user.code.code)
                 return jsonify({'error': 'Email not verified'}), 401
 
