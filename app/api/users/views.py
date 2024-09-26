@@ -50,7 +50,7 @@ def login_user():
                 return jsonify({'error': 'Email not verified'}), 401
 
             access_token = create_access_token(identity={"id":user.id,"role":str(user.role.value)})
-            return jsonify(access_token=access_token), 200
+            return jsonify({'user':user.to_dict(),'token':access_token}), 200
         else:
             return jsonify({'error': 'Invalid credentials'}),401
     else:
